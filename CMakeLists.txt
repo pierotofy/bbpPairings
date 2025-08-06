@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(bbpPairings 
+project(swisser 
     VERSION 1.0.0
     DESCRIPTION "BBP Pairings - Swiss System Tournament Pairing Software"
     LANGUAGES CXX
@@ -12,9 +12,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Configuration options (matching Makefile flags)
-option(ENABLE_BURSTEIN "Enable Burstein Swiss system" ON)
+option(ENABLE_BURSTEIN "Enable Burstein Swiss system" OFF)
 option(ENABLE_DUTCH "Enable Dutch Swiss system" ON)
-option(ENABLE_ENGINE_COMPARISON "Enable tournament checker and random tournament generator" ON)
+option(ENABLE_ENGINE_COMPARISON "Enable tournament checker and random tournament generator" OFF)
 option(ENABLE_DEBUG "Enable debug build" OFF)
 option(ENABLE_PROFILE "Enable profile build" OFF)
 option(ENABLE_OPTIMIZE "Enable optimization" ON)
@@ -56,20 +56,31 @@ else()
     set(VERSION_INFO "unknown version")
 endif()
 
-# Find all source files
-file(GLOB_RECURSE SOURCES "src/*.cpp")
-
 # Create the executable
-add_executable(bbpPairings ${SOURCES})
+#add_executable(bbpPairings ${SOURCES})
+
+# Define source files
+set(SOURCES src/swisser.cpp 
+            src/swisssystems/common.cpp 
+            src/matching/computer.cpp
+            src/matching/computer.cpp
+            src/matching/detail/graph.cpp
+            src/matching/detail/parentblossom.cpp
+            src/matching/detail/rootblossom.cpp)
+
+if(ENABLE_DUTCH)
+    list(APPEND SOURCES src/swisssystems/dutch.cpp)
+endif()
+add_executable(swisser ${SOURCES})
 
 # Set output name to match Makefile
-set_target_properties(bbpPairings PROPERTIES OUTPUT_NAME "bbpPairings")
+set_target_properties(swisser PROPERTIES OUTPUT_NAME "swisser")
 
 # Include directories
-target_include_directories(bbpPairings PRIVATE src)
+target_include_directories(swisser PRIVATE src)
 
 # Compiler flags (Linux/GCC specific, ignoring Windows flags)
-target_compile_options(bbpPairings PRIVATE
+target_compile_options(swisser PRIVATE
     -ftabstop=2
     -Werror
     -Wfatal-errors
@@ -97,7 +108,6 @@ target_compile_options(bbpPairings PRIVATE
     -Wsign-promo
     -Wstrict-overflow=4
     -Wsuggest-override
-    -Wswitch-default
     -Wundef
     -Wunknown-pragmas
     -Wunused-macros
@@ -110,13 +120,12 @@ target_compile_options(bbpPairings PRIVATE
 
 # GCC-specific flags (assuming GCC on Linux)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(bbpPairings PRIVATE
+    target_compile_options(swisser PRIVATE
         -Wabi=0
         -Waligned-new=all
         -Walloc-zero
         -Warray-bounds=2
         -Wattribute-alias=2
-        -Wcast-align=strict
         -Wcatch-value=3
         -Wconditionally-supported
         -Wduplicated-cond
@@ -128,7 +137,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -Wmultiple-inheritance
         -Wnormalized=nfkc
         -Wplacement-new=2
-        -Wredundant-tags
         -Wshadow=local
         -Wstrict-null-sentinel
         -Wstringop-overflow=4
@@ -149,7 +157,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     
     # GCC version-specific flags
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0")
-        target_compile_options(bbpPairings PRIVATE
+        target_compile_options(swisser PRIVATE
             -Warray-parameter=2
             -Wctad-maybe-unsupported
             -Wenum-conversion
@@ -160,63 +168,63 @@ endif()
 
 # Build type specific flags
 if(ENABLE_DEBUG)
-    target_compile_options(bbpPairings PRIVATE -ggdb)
+    target_compile_options(swisser PRIVATE -ggdb)
     if(ENABLE_OPTIMIZE)
-        target_compile_options(bbpPairings PRIVATE -Og)
+        target_compile_options(swisser PRIVATE -Og)
     endif()
 else()
-    target_compile_definitions(bbpPairings PRIVATE NDEBUG)
-    target_link_options(bbpPairings PRIVATE -s)
+    target_compile_definitions(swisser PRIVATE NDEBUG)
+    target_link_options(swisser PRIVATE -s)
     if(ENABLE_OPTIMIZE)
-        target_compile_options(bbpPairings PRIVATE -O3)
+        target_compile_options(swisser PRIVATE -O3)
     endif()
 endif()
 
 if(ENABLE_PROFILE)
-    target_compile_options(bbpPairings PRIVATE -ggdb -O3)
+    target_compile_options(swisser PRIVATE -ggdb -O3)
     if(NOT ENABLE_DEBUG)
-        target_compile_definitions(bbpPairings PRIVATE NDEBUG)
+        target_compile_definitions(swisser PRIVATE NDEBUG)
     endif()
 endif()
 
 # Link Time Optimization
 if(ENABLE_OPTIMIZE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(bbpPairings PRIVATE -flto)
-    target_link_options(bbpPairings PRIVATE -flto)
+    target_compile_options(swisser PRIVATE -flto)
+    target_link_options(swisser PRIVATE -flto)
 endif()
 
 # Conditional compilation flags based on enabled features
 if(NOT ENABLE_BURSTEIN)
-    target_compile_definitions(bbpPairings PRIVATE OMIT_BURSTEIN)
+    target_compile_definitions(swisser PRIVATE OMIT_BURSTEIN)
 endif()
 
 if(NOT ENABLE_DUTCH)
-    target_compile_definitions(bbpPairings PRIVATE OMIT_DUTCH)
+    target_compile_definitions(swisser PRIVATE OMIT_DUTCH)
 endif()
 
 if(NOT ENABLE_ENGINE_COMPARISON)
-    target_compile_definitions(bbpPairings PRIVATE OMIT_GENERATOR OMIT_CHECKER)
+    target_compile_definitions(swisser PRIVATE OMIT_GENERATOR OMIT_CHECKER)
 endif()
 
 # Optional maximum value definitions
 if(MAX_PLAYERS)
-    target_compile_definitions(bbpPairings PRIVATE MAX_PLAYERS=${MAX_PLAYERS})
+    target_compile_definitions(swisser PRIVATE MAX_PLAYERS=${MAX_PLAYERS})
 endif()
 
 if(MAX_POINTS)
-    target_compile_definitions(bbpPairings PRIVATE MAX_POINTS=${MAX_POINTS})
+    target_compile_definitions(swisser PRIVATE MAX_POINTS=${MAX_POINTS})
 endif()
 
 if(MAX_RATING)
-    target_compile_definitions(bbpPairings PRIVATE MAX_RATING=${MAX_RATING})
+    target_compile_definitions(swisser PRIVATE MAX_RATING=${MAX_RATING})
 endif()
 
 if(MAX_ROUNDS)
-    target_compile_definitions(bbpPairings PRIVATE MAX_ROUNDS=${MAX_ROUNDS})
+    target_compile_definitions(swisser PRIVATE MAX_ROUNDS=${MAX_ROUNDS})
 endif()
 
 # Version information
-target_compile_definitions(bbpPairings PRIVATE VERSION_INFO="${VERSION_INFO}")
+target_compile_definitions(swisser PRIVATE VERSION_INFO="${VERSION_INFO}")
 
 # Test support
 enable_testing()
@@ -228,18 +236,18 @@ elseif(EXISTS "${CMAKE_SOURCE_DIR}/test")
     # Create a simple test that runs the main executable
     add_test(
         NAME basic_test
-        COMMAND $<TARGET_FILE:bbpPairings> -r
+        COMMAND $<TARGET_FILE:swisser> -r
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 endif()
 
 # Installation
-install(TARGETS bbpPairings
+install(TARGETS swisser
     RUNTIME DESTINATION bin
 )
 
 install(FILES README.txt LICENSE.txt Apache-2.0.txt
-    DESTINATION share/doc/bbpPairings
+    DESTINATION share/doc/swisser
     OPTIONAL
 )
 
