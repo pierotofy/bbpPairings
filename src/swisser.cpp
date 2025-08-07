@@ -23,8 +23,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "httplib.h"
 #include "json.hpp"
+#include "validate.hpp"
+
 using json = nlohmann::json;
 #define APP_VERSION "0.9.3"
+
+
+
 
 int main(int argc, char **argv) {
     httplib::Server svr;
@@ -133,7 +138,11 @@ int main(int argc, char **argv) {
                             bs = tournament::MATCH_SCORE_WIN;
                             w->scoreWithoutAcceleration += tournament.pointsForLoss;
                             b->scoreWithoutAcceleration += tournament.pointsForWin;
+                        }else{
+                            throw std::runtime_error("Invalid game result (not 0, 0.5 or 1)");
                         }
+
+                        std::cerr << b->id << " " << w->id << std::endl;
 
                         wm->emplace_back(b->id,
                             tournament::COLOR_WHITE,
@@ -163,6 +172,13 @@ int main(int argc, char **argv) {
             
             const swisssystems::SwissSystem swissSystem = swisssystems::DUTCH;
             const swisssystems::Info &info = swisssystems::getInfo(swissSystem);
+            
+            validatePairConsistency(tournament);
+            validateScores(tournament);
+
+            // tournament.updateRanks();
+            // tournament.computePlayerData();
+            // info.updateAccelerations(tournament, tournament.playedRounds);
             std::list<swisssystems::Pairing> roundPairs = info.computeMatching(std::move(tournament), nullptr);
             swisssystems::sortResults(roundPairs, tournament);
             

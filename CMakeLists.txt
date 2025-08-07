@@ -16,9 +16,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Define source files
 set(SOURCES src/swisser.cpp 
+            src/validate.cpp
             src/swisssystems/common.cpp 
             src/swisssystems/dutch.cpp
             src/swisssystems/burstein.cpp
+            src/tournament/tournament.cpp
             src/matching/computer.cpp
             src/matching/computer.cpp
             src/matching/detail/graph.cpp
