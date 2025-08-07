@@ -171,15 +171,37 @@ int main(int argc, char **argv) {
                 tournament.players.push_back(std::move(p));
             }
 
-            int maxRounds = tournament.players.size() % 2 == 0 ? tournament.players.size() - 1 : tournament.players.size();
-            if (maxRounds < 1) maxRounds = 1;
-            // int suggestedRounds = 
-
-            swisssystems::SwissSystem swissSystem = swisssystems::DUTCH;
-            if (maxRounds < tournament.expectedRounds){
-                swissSystem = swisssystems::ROUNDROBIN;
+            swisssystems::SwissSystem swissSystem = swisssystems::ROUNDROBIN;
+            int numPlayers = tournament.players.size();
+            int numRounds = tournament.expectedRounds;
+    
+            // int maxSwissRounds = 0;
+            if (numPlayers <= 1 || numRounds <= 0){
+                throw std::runtime_error("Cannot pair single or no players or when num rounds <= 0");
             }
             
+            // minSwissPlayers[3] -> minimum number of players for a 3 rounds swiss tournament to work 
+            // determined empirically by stress testing the system
+            int minSwissPlayers[9] = {
+                -1, -1, 
+                3, // 2 rounds
+                3, // 3 rounds
+                5, // 4 rounds
+                7, // 5 rounds
+                9, // 6 rounds
+                9, // 7 rounds
+                11, // 8 rounds
+            };
+            int safeNumberOfSwissRounds = static_cast<int>(std::log2(numPlayers) + 1);
+
+            if ((numPlayers > 16) ||  // Round robin limit
+                (numRounds == 1) || // Trivial case
+                (numRounds <= safeNumberOfSwissRounds) || // Safe
+                (numRounds <= 8 && minSwissPlayers[numRounds] <= numPlayers)){ // Tested empirically 
+                swissSystem = swisssystems::DUTCH;
+            }
+
+            swissSystem = swisssystems::DUTCH;
             const swisssystems::Info &info = swisssystems::getInfo(swissSystem);
             
             validatePairConsistency(tournament);
@@ -188,7 +210,7 @@ int main(int argc, char **argv) {
             tournament.updateRanks();
             tournament.computePlayerData();
             info.updateAccelerations(tournament, tournament.playedRounds);
-            std::list<swisssystems::Pairing> roundPairs = info.computeMatching(std::move(tournament));
+            std::list<swisssystems::Pairing> roundPairs = info.computeMatching(std::move(tournament), nullptr);
             swisssystems::sortResults(roundPairs, tournament);
             
             json pairs = json::array();

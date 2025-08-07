@@ -16,7 +16,6 @@ namespace swisssystems
   namespace roundrobin
   {
 
-
     std::list<Pairing> computeMatching(
       tournament::Tournament &&,
       std::ostream *const = nullptr);

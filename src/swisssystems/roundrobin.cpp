@@ -8,10 +8,8 @@ namespace swisssystems
 {
 namespace roundrobin
 {
-namespace
-{
 
-std::list<Pairing> computeMatching(tournament::Tournament &&tournament, std::ostream *const = nullptr){
+std::list<Pairing> computeMatching(tournament::Tournament &&tournament, std::ostream *const){
     std::list<Pairing> games;
 
     int playerCount = tournament.players.size();
@@ -174,6 +172,5 @@ std::list<Pairing> computeMatching(tournament::Tournament &&tournament, std::ost
 
 }
 
-}
 }
 }
