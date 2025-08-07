@@ -20,6 +20,7 @@ namespace swisssystems
 #ifndef OMIT_BURSTEIN
     BURSTEIN,
 #endif
+    ROUNDROBIN,
     NONE
   };
 

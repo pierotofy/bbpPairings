@@ -144,8 +144,6 @@ int main(int argc, char **argv) {
                             throw std::runtime_error("Invalid game result (not 0, 0.5 or 1)");
                         }
 
-                        std::cerr << b->id << " " << w->id << std::endl;
-
                         wm->emplace_back(b->id,
                             tournament::COLOR_WHITE,
                             ws,
@@ -172,8 +170,16 @@ int main(int argc, char **argv) {
                 tournament.playersByRank.push_back(p.id);
                 tournament.players.push_back(std::move(p));
             }
+
+            int maxRounds = tournament.players.size() % 2 == 0 ? tournament.players.size() - 1 : tournament.players.size();
+            if (maxRounds < 1) maxRounds = 1;
+            // int suggestedRounds = 
+
+            swisssystems::SwissSystem swissSystem = swisssystems::DUTCH;
+            if (maxRounds < tournament.expectedRounds){
+                swissSystem = swisssystems::ROUNDROBIN;
+            }
             
-            const swisssystems::SwissSystem swissSystem = swisssystems::DUTCH;
             const swisssystems::Info &info = swisssystems::getInfo(swissSystem);
             
             validatePairConsistency(tournament);
@@ -182,7 +188,7 @@ int main(int argc, char **argv) {
             tournament.updateRanks();
             tournament.computePlayerData();
             info.updateAccelerations(tournament, tournament.playedRounds);
-            std::list<swisssystems::Pairing> roundPairs = info.computeMatching(std::move(tournament), nullptr);
+            std::list<swisssystems::Pairing> roundPairs = info.computeMatching(std::move(tournament));
             swisssystems::sortResults(roundPairs, tournament);
             
             json pairs = json::array();

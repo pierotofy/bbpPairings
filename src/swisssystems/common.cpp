@@ -18,6 +18,7 @@
 #include "burstein.h"
 #include "common.h"
 #include "dutch.h"
+#include "roundrobin.h"
 
 namespace swisssystems
 {
@@ -396,6 +397,7 @@ namespace swisssystems
 #ifndef OMIT_BURSTEIN
   constexpr burstein::BursteinInfo bursteinInfo{ };
 #endif
+  constexpr roundrobin::RoundRobinInfo roundRobinInfo{ };
 
   /**
    * Retrieve the Info object for the specified SwissSystem.
@@ -412,6 +414,8 @@ namespace swisssystems
     case BURSTEIN:
       return bursteinInfo;
 #endif
+    case ROUNDROBIN:
+      return roundRobinInfo;
     default:
       throw std::logic_error("");
     }
