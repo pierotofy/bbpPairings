@@ -77,7 +77,8 @@ int main(int argc, char **argv) {
             tournament.expectedRounds = j.at("rounds").get<int>();
             tournament.playedRounds = games.size();
             tournament.initialColor = tournament::COLOR_WHITE;
-
+            
+            std::vector<std::string> sortedPlayerNames;
             std::unordered_map<std::string, tournament::Player> players;
             std::unordered_map<tournament::player_index, std::string> playerNames;
             
@@ -92,6 +93,7 @@ int main(int argc, char **argv) {
                 id++;
 
                 players[name] = player;
+                sortedPlayerNames.push_back(name);
             }
 
             // Replay game history (optional)
@@ -159,15 +161,16 @@ int main(int argc, char **argv) {
                             tournament::COLOR_NONE,
                             tournament::MATCH_SCORE_WIN,
                             false,
-                            true);
+                            false);
                         w->scoreWithoutAcceleration += tournament.pointsForPairingAllocatedBye;
                     }
                 }
             }
             
-            for (auto &p : players){
-                tournament.playersByRank.push_back(p.second.id);
-                tournament.players.push_back(std::move(p.second));
+            for (auto &name : sortedPlayerNames){
+                auto p = players[name];
+                tournament.playersByRank.push_back(p.id);
+                tournament.players.push_back(std::move(p));
             }
             
             const swisssystems::SwissSystem swissSystem = swisssystems::DUTCH;
@@ -176,9 +179,9 @@ int main(int argc, char **argv) {
             validatePairConsistency(tournament);
             validateScores(tournament);
 
-            // tournament.updateRanks();
-            // tournament.computePlayerData();
-            // info.updateAccelerations(tournament, tournament.playedRounds);
+            tournament.updateRanks();
+            tournament.computePlayerData();
+            info.updateAccelerations(tournament, tournament.playedRounds);
             std::list<swisssystems::Pairing> roundPairs = info.computeMatching(std::move(tournament), nullptr);
             swisssystems::sortResults(roundPairs, tournament);
             
