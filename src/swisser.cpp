@@ -201,7 +201,6 @@ int main(int argc, char **argv) {
                 swissSystem = swisssystems::DUTCH;
             }
 
-            swissSystem = swisssystems::DUTCH;
             const swisssystems::Info &info = swisssystems::getInfo(swissSystem);
             
             validatePairConsistency(tournament);
