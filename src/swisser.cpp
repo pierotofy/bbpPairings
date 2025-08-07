@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "httplib.h"
 #include "json.hpp"
 using json = nlohmann::json;
-#define APP_VERSION "0.9.2"
+#define APP_VERSION "0.9.3"
 
 int main(int argc, char **argv) {
     httplib::Server svr;
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
             std::unordered_map<std::string, tournament::Player> players;
             std::unordered_map<tournament::player_index, std::string> playerNames;
             
-            tournament::player_index id = 1;
+            tournament::player_index id = 0;
 
             for (const auto &p : j.at("players")){
                 std::string name = p.at("name").get<std::string>();
@@ -89,10 +89,7 @@ int main(int argc, char **argv) {
                 players[name] = player;
             }
 
-            // int nextRound = games.size() + 1;
-
             // Replay game history (optional)
-            int roundHist = 1;
             for (const auto &results : games){
                 for (const auto &r: results){
                     std::string white = r.at("white").get<std::string>();
@@ -106,44 +103,12 @@ int main(int argc, char **argv) {
                     if (r.contains("result")) result = r["result"].get<float>();
                     
                     auto w = &players[white];
-
-                    // White played white
-                    // if (!bye) w->addColor(CPPDubovSystem::Color::WHITE);
-
-                    // Reset prev upfloat
-                    // w->setUpfloatPrevStatus(false);
                     auto wm = &w->matches;
 
                     if (!black.empty() && !bye){
                         auto b = &players[black];
 
                         auto bm = &b->matches;
-
-                        // // Black played black
-                        // b->addColor(CPPDubovSystem::Color::BLACK);
-
-                        // // Reset prev upfloat
-                        // b->setUpfloatPrevStatus(false);
-
-                        // // They played each other
-                        // if (!w->hasPlayedOpp(*b)){
-                        //     w->addOpp(b->getID());
-                        //     w->addOppRating(b->getRating());
-                        // }
-                        
-                        // if (!b->hasPlayedOpp(*w)){
-                        //     b->addOpp(w->getID());
-                        //     b->addOppRating(w->getRating());
-                        // }
-                        
-                        // // Keep track of upfloaters
-                        // if (w->getPoints() > b->getPoints()){
-                        //     b->incrementUpfloat();
-                        //     if (roundHist == nextRound - 1) b->setUpfloatPrevStatus(true);
-                        // }else if (w->getPoints() < b->getPoints()){
-                        //     w->incrementUpfloat();
-                        //     if (roundHist == nextRound - 1) w->setUpfloatPrevStatus(true);
-                        // }
 
                         tournament::MatchScore ws;
                         tournament::MatchScore bs;
@@ -186,10 +151,9 @@ int main(int argc, char **argv) {
                             tournament::MATCH_SCORE_WIN,
                             false,
                             true);
+                        w->scoreWithoutAcceleration += tournament.pointsForPairingAllocatedBye;
                     }
                 }
-
-                roundHist++;
             }
             
             for (auto &p : players){
@@ -198,15 +162,11 @@ int main(int argc, char **argv) {
             }
             
             const swisssystems::SwissSystem swissSystem = swisssystems::DUTCH;
-
-            // std::vector<CPPDubovSystem::Match> pairings = tournament.generatePairings(nextRound);
             const swisssystems::Info &info = swisssystems::getInfo(swissSystem);
-            std::list<swisssystems::Pairing> roundPairs;
-            json pairs = json::array();
-
-            roundPairs = info.computeMatching(std::move(tournament), nullptr);
+            std::list<swisssystems::Pairing> roundPairs = info.computeMatching(std::move(tournament), nullptr);
             swisssystems::sortResults(roundPairs, tournament);
-
+            
+            json pairs = json::array();
             for (const swisssystems::Pairing &p : roundPairs){
                 json m = json::object();
                 m["white"] = playerNames[p.white];
